@@ -11,6 +11,39 @@ Importante: nunca se cambia el tipo de archivo. Solo se renombra el nombre base 
 - Python 3.9+
 - Paquetes: `pydicom`, `pandas`, `pyyaml` (se instalan con `pip install -e .`)
 
+## Instalación (recomendada)
+Ejecuta estos pasos solo una vez para instalar el comando `organize-dicom` dentro de un entorno virtual. Debes correrlos en la carpeta raíz del repositorio (donde está el archivo `pyproject.toml`).
+
+Linux (bash):
+```bash
+git clone https://github.com/jofavalle/dicom-directory-separator-and-metadata-extractor.git
+cd dicom-directory-separator-and-metadata-extractor
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -U pip setuptools wheel
+python -m pip install -e .
+
+# Verificar instalación
+organize-dicom --help
+```
+
+Windows (PowerShell):
+```powershell
+git clone https://github.com/jofavalle/dicom-directory-separator-and-metadata-extractor.git
+cd dicom-directory-separator-and-metadata-extractor
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -U pip setuptools wheel
+python -m pip install -e .
+
+# Verificar instalación
+organize-dicom --help
+```
+
+Notas:
+- El comando `python -m pip install -e .` debe ejecutarse en la carpeta del repositorio, no dentro de la carpeta de datos `dicom/`.
+- Tras instalarse, puedes usar `organize-dicom` desde cualquier carpeta; solo ajusta `--input` y `--output` a las rutas deseadas.
+
 ## Uso en Linux
 Dentro del directorio que contiene `dicomdir` y/o la carpeta `dicom/`:
 
