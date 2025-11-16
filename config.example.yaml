@@ -1,0 +1,10 @@
+protocol_map:
+  "Senos Paranasales": "CT_Senos_Paranasales"
+  "Cerebro mas de 10 anios": "CT_Cerebro_>10a"
+  "Abdomen sin CE": "CT_Abdomen_SinContraste"
+  "Abdomen 16 - 30 kg": "CT_Abdomen_Pediatria_16_30kg"
+
+# Opcional: reglas regex aplicadas en orden (si coincide, reemplaza)
+protocol_regex:
+  - pattern: "^cerebro.*anios$"
+    replace: "CT_Cerebro"

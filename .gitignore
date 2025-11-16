@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+env/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Project data (do NOT version DICOM media or generated outputs)
+dicom/
+dicomdir
+autorun.inf
+viewer.exe
+viewers/
+
+# Generated outputs and indexes
+output/
+organized/
+organized_by_test/
+unified_out/
+advanced_out/
+entrypoint_out/
+sanity_out/
+**/qa/
+**/csv/
+**/manifest.csv
+
+# Logs
+*.log

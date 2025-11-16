@@ -1,0 +1,21 @@
+[project]
+name = "ctqtools"
+version = "0.1.0"
+description = "Módulos internos para organize-dicom (indexado DICOM, QA y utilidades)"
+requires-python = ">=3.9"
+dependencies = [
+  "pydicom>=2.3",
+  "pandas>=2.0",
+  "pyyaml>=6.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+organize-dicom = "ctqtools.organize_dicom:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ctqtools*"]
