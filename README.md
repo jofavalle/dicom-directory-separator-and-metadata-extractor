@@ -54,6 +54,23 @@ organize-dicom --input . --output out --no-organize --export-metadata --qa
 organize-dicom --input . --output out_all --all-tags --no-organize --no-qa
 ```
 
+## ¿Dónde deben estar los datos y la herramienta?
+- No es necesario que el repositorio esté en la misma carpeta que las imágenes.
+- Hay dos formas de uso:
+	- Instalado como comando (`pip install -e .`): puedes ejecutar `organize-dicom` desde cualquier carpeta y apuntar `--input` al directorio donde están los DICOM.
+	- Ejecutando el script directamente (sin instalar): ejecuta `python script/organize-dicom.py` desde dentro del repositorio, pero el `--input` puede ser cualquier ruta (no hace falta mover el repo junto a los datos).
+- El parámetro `--input` debe apuntar a la raíz que contiene `dicomdir` o a una carpeta con subcarpeta `dicom/`.
+- El `--output` puede ser una ruta absoluta o relativa al directorio donde ejecutas el comando; si no existe, se creará.
+
+Ejemplos:
+```bash
+# Ejecutando desde tu home contra un CD montado en /media/CD
+organize-dicom --input /media/CD --output ~/out --no-organize --export-metadata --qa
+
+# Dentro del repo, procesando una carpeta fuera del repo
+python3 script/organize-dicom.py --input /ruta/a/estudios --output ./organized
+```
+
 ## Opciones principales
 - `--organize/--no-organize`: copiar y renombrar por prueba (por defecto: sí)
 - `--export-metadata/--no-export-metadata`: CSVs globales y por paciente (por defecto: sí)
