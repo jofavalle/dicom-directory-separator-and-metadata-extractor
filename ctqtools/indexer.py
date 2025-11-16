@@ -24,6 +24,15 @@ DEFAULT_KEYS = [
     "ImagePositionPatient",
     "SOPInstanceUID",
     "InstanceNumber",
+    # CT exposure/recon parameters (when available)
+    "ConvolutionKernel",
+    "KVP",
+    "ExposureTime",
+    "ExposureTimeInms",
+    "XRayTubeCurrent",
+    "Exposure",
+    "SpiralPitchFactor",
+    "PitchFactor",
 ]
 
 

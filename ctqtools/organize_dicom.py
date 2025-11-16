@@ -284,6 +284,85 @@ def main(argv: List[str] | None = None) -> int:
         from .qa import run_qa
         qa_info = run_qa(df, outdir)
 
+    # Resumen CT por Paciente/Protocolo (parámetros: kernel, kVp, ms, mA, mAs, pitch)
+    try:
+        if ns.export_metadata and not ns.dry_run and "PatientID" in df.columns and "ProtocolNorm" in df.columns:
+            params_cols = {
+                "ConvolutionKernel": "kernel",
+                "KVP": "kvp",
+                "ExposureTime": "exposure_time",
+                "ExposureTimeInms": "exposure_time_ms",
+                "XRayTubeCurrent": "xray_tube_current_mA",
+                "Exposure": "exposure_mAs",
+                "SpiralPitchFactor": "pitch_spiral",
+                "PitchFactor": "pitch_factor",
+            }
+
+            work = df.copy()
+            # Normalizar tiempo de exposición en ms (prioriza ExposureTimeInms)
+            import pandas as _pd
+            def _to_float(x):
+                try:
+                    return float(str(x))
+                except Exception:
+                    return _pd.NA
+            if "ExposureTimeInms" in work.columns:
+                work["_ExposureTime_ms"] = work["ExposureTimeInms"].map(_to_float)
+            else:
+                work["_ExposureTime_ms"] = _pd.NA
+            if "ExposureTime" in work.columns:
+                et_as_ms = work["ExposureTime"].map(_to_float)
+                work["_ExposureTime_ms"] = work["_ExposureTime_ms"].fillna(et_as_ms)
+
+            # Pitch efectivo por fila (SpiralPitchFactor > PitchFactor)
+            pitch_cols = []
+            if "SpiralPitchFactor" in work.columns:
+                pitch_cols.append("SpiralPitchFactor")
+            if "PitchFactor" in work.columns:
+                pitch_cols.append("PitchFactor")
+            if pitch_cols:
+                work["_Pitch"] = work[pitch_cols].bfill(axis=1).iloc[:, 0]
+            else:
+                work["_Pitch"] = _pd.NA
+
+            def uniq_join(series):
+                vals = [str(v) for v in series.dropna().astype(str).unique() if str(v).strip() not in ("", "None", "nan")]
+                return " | ".join(sorted(vals)) if vals else ""
+
+            grp_cols = ["PatientID", "ProtocolNorm"]
+            if "PatientName" in work.columns:
+                # mantener PatientName de apoyo (único por paciente si viene limpio)
+                grp_cols_display = ["PatientID", "PatientName", "ProtocolNorm"]
+            else:
+                grp_cols_display = grp_cols
+
+            g = work.groupby(grp_cols, dropna=False, sort=False)
+            summary = g.agg(
+                n_series=("SeriesInstanceUID", "nunique") if "SeriesInstanceUID" in work.columns else ("SOPInstanceUID", "nunique"),
+                n_instances=("SOPInstanceUID", "count") if "SOPInstanceUID" in work.columns else (work.columns[0], "count"),
+                kernel=("ConvolutionKernel", uniq_join) if "ConvolutionKernel" in work.columns else (work.columns[0], lambda s: ""),
+                kvp=("KVP", uniq_join) if "KVP" in work.columns else (work.columns[0], lambda s: ""),
+                exposure_time_ms=("_ExposureTime_ms", uniq_join),
+                xray_tube_current_mA=("XRayTubeCurrent", uniq_join) if "XRayTubeCurrent" in work.columns else (work.columns[0], lambda s: ""),
+                exposure_mAs=("Exposure", uniq_join) if "Exposure" in work.columns else (work.columns[0], lambda s: ""),
+                pitch=("_Pitch", uniq_join),
+            ).reset_index()
+
+            # Reordenar columnas para legibilidad
+            desired = []
+            for c in ["PatientID", "PatientName", "ProtocolNorm", "n_series", "n_instances", "kernel", "kvp", "exposure_time_ms", "xray_tube_current_mA", "exposure_mAs", "pitch"]:
+                if c in summary.columns:
+                    desired.append(c)
+            summary = summary[desired]
+
+            out_dir_pp = os.path.join(outdir, "csv", "patient_protocols")
+            ensure_dir(out_dir_pp)
+            out_summary = os.path.join(out_dir_pp, "summary_ct_params_by_patient_protocol.csv")
+            summary.to_csv(out_summary, index=False)
+            outputs["ct_params_summary_csv"] = out_summary
+    except Exception:
+        pass
+
     print({
         "total_files_seen": len(inputs),
         "indexed_instances": len(df),
