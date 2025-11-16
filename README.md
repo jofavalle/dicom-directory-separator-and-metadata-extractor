@@ -71,6 +71,22 @@ organize-dicom --input /media/CD --output ~/out --no-organize --export-metadata 
 python3 script/organize-dicom.py --input /ruta/a/estudios --output ./organized
 ```
 
+Ejemplos en Windows (PowerShell):
+```powershell
+# CD/DVD montado como E:\
+organize-dicom --input E:\ --output "$env:USERPROFILE\Documents\out" --no-organize --export-metadata --qa
+
+# Carpeta con espacios (usar comillas)
+organize-dicom --input "E:\Estudios DICOM" --output "C:\Temp\organized"
+
+# Ejecutar el script directamente
+python script/organize-dicom.py --input "D:\datos\dicom" --output "C:\out\organized"
+```
+
+Sugerencias:
+- En Windows, usa comillas dobles "..." si la ruta contiene espacios.
+- Puedes usar rutas absolutas o relativas para `--input` y `--output`.
+
 ## Opciones principales
 - `--organize/--no-organize`: copiar y renombrar por prueba (por defecto: sí)
 - `--export-metadata/--no-export-metadata`: CSVs globales y por paciente (por defecto: sí)
