@@ -57,7 +57,14 @@ def read_metadata(path: str, all_tags: bool = False) -> Dict[str, Any]:
     if all_tags:
         row = flatten_dataset(ds)
     else:
-        row = {k: (str(ds.get(k)) if k in ds else None) for k in DEFAULT_KEYS}
+        # Avoid using `k in ds` with non-standard keywords (e.g., PitchFactor) to prevent warnings.
+        row = {}
+        for k in DEFAULT_KEYS:
+            try:
+                v = getattr(ds, k, None)
+            except Exception:
+                v = None
+            row[k] = str(v) if v is not None else None
     row["_path"] = path
     try:
         row["_size_bytes"] = os.path.getsize(path)
