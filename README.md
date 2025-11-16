@@ -11,22 +11,41 @@ Importante: nunca se cambia el tipo de archivo. Solo se renombra el nombre base 
 - Python 3.9+
 - Paquetes: `pydicom`, `pandas`, `pyyaml` (se instalan con `pip install -e .`)
 
-## Uso
+## Uso en Linux
 Dentro del directorio que contiene `dicomdir` y/o la carpeta `dicom/`:
 
 ```bash
 # A) Usar el script directamente
-python script/organize-dicom.py \
-	--input . \
-	--output organized_by_test \
-	--config config.yaml
+python3 script/organize-dicom.py \
+  --input . \
+  --output organized_by_test \
+  --config config.yaml
 
-# B) Instalar comando y usarlo
+# B) Instalar el comando y usarlo
 pip install -e .
 organize-dicom --input . --output organized_by_test --config config.yaml
 ```
 
-Comunes:
+## Uso en Windows
+En PowerShell, dentro del directorio que contiene `dicomdir` y/o la carpeta `dicom/`:
+
+```powershell
+# A) Instalar el comando (una sola vez en el entorno)
+python -m pip install -e .
+
+# B) Ejecutar con el comando
+organize-dicom --input . --output organized_by_test --config config.yaml
+
+# C) O ejecutar el script directamente
+python script/organize-dicom.py --input . --output organized_by_test --config config.yaml
+```
+
+Notas para Windows:
+- Mantén `--link-mode copy` (por defecto) salvo que necesites `hardlink` (mismo volumen NTFS) o `symlink` (requiere modo Desarrollador o consola con privilegios de admin).
+- Si ves errores por rutas largas, habilita “long paths” en Windows o usa rutas de salida más cortas.
+- El sistema de archivos es insensible a mayúsculas/minúsculas; usa `--on-collision rename` si sospechas colisiones.
+
+## Comandos comunes
 ```bash
 # Solo exportar metadatos (sin copiar imágenes)
 organize-dicom --input . --output out --no-organize --export-metadata --qa
@@ -78,3 +97,6 @@ protocol_regex:
 		replace: "CT_Cerebro"
 ```
 Guárdalo como `config.yaml` en la raíz o pásalo con `--config ruta`.
+
+## Contacto/Créditos
+- Email: av18012@ues.edu.sv
