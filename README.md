@@ -1,72 +1,73 @@
-# organize-dicom
+# DICOM Directory Separator and Metadata Extractor
 
-Script único para:
-- Organizar DICOM por prueba (serie) incluyendo nombre de paciente y protocolo en la carpeta.
-- Copiar y renombrar secuencialmente las imágenes para su visualización ordenada en ImageJ, preservando la extensión (tipo de archivo).
-- Exportar metadatos a CSV (global, por paciente, por paciente/protocolo) y generar reportes de QA.
+Herramienta en Python para:
+- Separar y organizar estudios DICOM mezclados (de CD/DVD) por Prueba (Serie), incluyendo nombre de Paciente y Protocolo en la carpeta de salida.
+- Copiar y renombrar secuencialmente las imágenes (0001.ext, 0002.ext, …) preservando la extensión, ideal para ImageJ.
+- Exportar CSVs de metadatos (global, por paciente y por paciente/protocolo) y generar reportes básicos de QA.
 
-## Uso rápido
+Importante: nunca se cambia el tipo de archivo. Solo se renombra el nombre base en las copias organizadas; los originales no se modifican.
 
+## Requisitos
+- Python 3.9+
+- Paquetes: `pydicom`, `pandas`, `pyyaml` (se instalan con `pip install -e .`)
+
+## Uso
 Dentro del directorio que contiene `dicomdir` y/o la carpeta `dicom/`:
 
 ```bash
-# Organizar (copiar + renombrar) y exportar metadatos + QA
-/home/debstroyer/Documentos/DATA/BULLE/.venv/bin/python organize-dicom.py \
+# A) Usar el script directamente
+python script/organize-dicom.py \
 	--input . \
 	--output organized_by_test \
 	--config config.yaml
 
-# Solo exportar metadatos (sin copiar)
-/home/debstroyer/Documentos/DATA/BULLE/.venv/bin/python organize-dicom.py --input . --output out --no-organize --export-metadata --qa
+# B) Instalar comando y usarlo
+pip install -e .
+organize-dicom --input . --output organized_by_test --config config.yaml
+```
 
-# Exportar todos los tags a nivel instancia (CSV ancho)
-/home/debstroyer/Documentos/DATA/BULLE/.venv/bin/python organize-dicom.py --input . --output out --all-tags --no-organize
-
-### Instalación (opcional) del comando `organize-dicom`
-
+Comunes:
 ```bash
-# Instalar en modo editable (recomendado para desarrollo)
-/home/debstroyer/Documentos/DATA/BULLE/.venv/bin/python -m pip install -e .
+# Solo exportar metadatos (sin copiar imágenes)
+organize-dicom --input . --output out --no-organize --export-metadata --qa
 
-# Ejecutar como comando del sistema (dentro del venv)
-/home/debstroyer/Documentos/DATA/BULLE/.venv/bin/organize-dicom --input . --output out --no-organize --export-metadata --qa
+# Exportar todos los tags (CSV ancho) sin QA
+organize-dicom --input . --output out_all --all-tags --no-organize --no-qa
 ```
 
-## Opciones útiles
+## Opciones principales
+- `--organize/--no-organize`: copiar y renombrar por prueba (por defecto: sí)
+- `--export-metadata/--no-export-metadata`: CSVs globales y por paciente (por defecto: sí)
+- `--qa/--no-qa`: reportes de QA (por defecto: sí)
+- `--config`: YAML para normalizar nombres de protocolo (ver ejemplo en `config.example.yaml`)
+- `--all-tags`: exportar todos los tags a nivel instancia (CSV más grande)
+- `--workers`: hilos para lectura de metadatos (por defecto: 8)
 
-- `--link-mode {copy,hardlink,symlink}`: modo de materialización al organizar (por defecto `copy`).
-- `--on-collision {skip,overwrite,rename}`: política si el destino existe (por defecto `skip`).
-- `--pad-width N`: padding fijo para 0001, 0002… (auto por defecto).
-- `--copy-workers N`: concurrencia para copias/enlaces.
-- Filtros: `--modality CT` (repetible), `--date-range 20250101:20251231`, `--patient-id P1` (repetible), `--protocol-include "regex"`, `--protocol-exclude "regex"`.
-- Orden de imágenes: usa `InstanceNumber`; si falta, intenta `ImagePositionPatient` (eje Z) y luego `AcquisitionTime`.
+## Organización y copiado
+- Carpeta de salida por Prueba (Serie):
+	`Prueba_<PatientName>__<ProtocolNorm>__Series_<SeriesNumber>_<SeriesInstanceUID>/`
+- Dentro: copias secuenciales `0001.ext`, `0002.ext`, … con la extensión original. También `manifest.csv` con el mapeo.
+- Opciones avanzadas:
+	- `--link-mode {copy,hardlink,symlink}` (default: `copy`)
+	- `--on-collision {skip,overwrite,rename}` (default: `skip`)
+	- `--pad-width N` (padding fijo; auto si 0)
+	- `--copy-workers N` (concurrencia de copias)
 
-## Publicar en GitHub
+## Filtros
+- `--modality CT` (repetible)
+- `--date-range YYYYMMDD:YYYYMMDD`
+- `--patient-id <ID>` (repetible)
+- `--protocol-include "regex"` / `--protocol-exclude "regex"`
 
-Este repositorio incluye un `.gitignore` que excluye medios DICOM y salidas generadas. Pasos sugeridos:
-
-```bash
-# Inicializar repo y primer commit
-git init
-git add .
-git commit -m "Initial commit: organize-dicom tool"
-
-# Crear remoto y hacer push (reemplaza la URL por la tuya)
-git remote add origin https://github.com/<usuario>/<repo>.git
-git branch -M main
-git push -u origin main
-```
-
-```
-
-Notas:
-- Al organizar, se COPIAN los archivos y se renombran como 0001.ext, 0002.ext… conservando la extensión original; ideal para ImageJ.
-- Requiere Python 3.9+ y paquetes: pydicom, pandas, pyyaml.
+## Salidas
+- `global_index_instances.csv`: una fila por archivo con metadatos principales (o todos los tags si `--all-tags`).
+- `global_index_series.csv`: resumen por serie (conteo, rangos de InstanceNumber).
+- `csv/patients/…`: CSVs por paciente (instancias y series).
+- `csv/patient_protocols/…`: CSVs por paciente/protocolo.
+- `qa/*.csv`: jerarquía, gaps de InstanceNumber, duplicados SOP y tags críticos (según aplique).
 
 ## Configuración de protocolos
-
 Ejemplo en `config.example.yaml`:
-
 ```yaml
 protocol_map:
 	"Senos Paranasales": "CT_Senos_Paranasales"
@@ -76,5 +77,4 @@ protocol_regex:
 	- pattern: "^cerebro.*anios$"
 		replace: "CT_Cerebro"
 ```
-
-Guárdalo como `config.yaml` en la raíz o pasa `--config ruta`.
+Guárdalo como `config.yaml` en la raíz o pásalo con `--config ruta`.
